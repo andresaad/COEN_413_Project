@@ -19,35 +19,38 @@
 `include "hdl/root.sv"
 
 class apb_trans;
-    rand apb_addr_t addr;
-    rand apb_data_t data;
-    rand trans_e                 transaction;
+   
+    rand bit [3:0] cmd;
+    rand bit [31:0] data;
+    rand bit [31:0] data2;
     static int count=0;
+    bit [1:0] tag;
     int id, trans_cnt;
-
-    function new;
-    id = count++;
-    endfunction
-
 
     function void display(string prefix);
         case (this.transaction)
           READ:
-            $display($time, ": %s Read  Addr=0x%02X Data=0x%02X id=%0d",
+            $display($time, ": %s Read  CMD =0x%02X Data=0x%02X id=%0d",
                    prefix, addr, data, id);
           WRITE:
-            $display($time, ": %s Write Addr=0x%02X Data=0x%02X id=%0d",
-                   prefix, addr, data, id);
+            $display($time, ": %s Write CMD =0x%02X Data=0x%02X id=%0d",
+                   prefix, cmd, data, id);
           default:
             $display($time, ": %s Idle  --------------------------", prefix);
         endcase
   endfunction: display
+
+  function new;
+    id = count++;
+    tag = id;
+    endfunction
+
     
   function apb_trans copy();
     apb_trans to   = new();
-    to.addr        = this.addr;
+    to.cmd        = this.cmd;
     to.data        = this.data;
-    to.transaction = this.transaction;
+    to.data2 	  = this.data2
     copy = to;
   endfunction: copy
     

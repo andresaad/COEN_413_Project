@@ -14,47 +14,85 @@
  *******************************************************************************
 */
 
+
+
 `ifndef APB_IF_DEFINE
 `define APB_IF_DEFINE
 
 `include "hdl/root.sv"
 
 interface apb_if(input PClk);
-  logic [APB_ADDR_WIDTH-1:0]  PAddr;
-  logic PSel;
-  logic [APB_DATA_WIDTH-1:0]  PWData;
-  logic [APB_DATA_WIDTH-1:0]  PRData;
-  logic PEnable;
-  logic PWrite;
-  logic Rst;
+  
+  	logic [APB_WIDTH-1:0] PCmd;
+	logic [APB_DATA_WIDTH-1:0] PData;
+	logic [1:0] PTag;
+	
+	//Input for DUT
+    	logic [APB_CMD_WIDTH-1:0] req1_cmd_in;
+    	logic [APB_CMD_WIDTH-1:0] req2_cmd_in;
+    	logic [APB_CMD_WIDTH-1:0] req3_cmd_in;
+    	logic [APB_CMD_WIDTH-1:0] req4_cmd_in;
 
-  clocking master_cb @(posedge PClk);
-    default input #1 output #1;
-    output  PAddr;
-    output  PSel;
-    output  PWData;
-    input   PRData;
-    output  PEnable;
-    output  PWrite;
-    output  Rst; 
-  endclocking
+	logic [APB_DATA_WIDTH-1:0]  req1_data_in;
+	logic [APB_DATA_WIDTH-1:0]  req2_data_in;
+	logic [APB_DATA_WIDTH-1:0]  req3_data_in;
+	logic [APB_DATA_WIDTH-1:0]  req4_data_in;
 
-  clocking monitor_cb @(posedge PClk);
-    // default input #1skew output #0;
-    input  PAddr;
-    input  PSel;
-    input  PWData;
-    input  PRData;
-    input  PEnable;
-    input  PWrite;
-    input  Rst; 
-  endclocking
+    	logic [1:0]  req1_tag_in;
+    	logic [1:0]  req2_tag_in;
+    	logic [1:0]  req3_tag_in;
+    	logic [1:0]  req4_tag_in;
 
-  modport Master(clocking master_cb);
-  modport Monitor(clocking monitor_cb);
+	logic reset;
 
-  modport Slave(input PAddr, PClk, PSel, PWData, PEnable, PWrite, Rst,
-                output PRData);
+    	//Output for DUT
+   	 wire [1:0]  out_resp1;
+   	 wire [1:0]  out_resp2;
+   	 wire [1:0]  out_resp3;
+   	 wire [1:0]  out_resp4;
+
+    	wire [APB_WIDTH-1:0]  out_data1;
+    	wire [APB_DATA_WIDTH-1:0]  out_data2;
+    	wire [APB_DATA_WIDTH-1:0]  out_data3;
+    	wire [APB_DATA_WIDTH-1:0]  out_data4;   
+    
+    	wire [1:0]  out_tag1;
+    	wire [1:0]  out_tag2;
+    	wire [1:0]  out_tag3;
+    	wire [1:0]  out_tag4;
+
+
+  always @ (posedge PClk) begin
+        req1_cmd_in <= PCmd;
+        req2_cmd_in <= PCmd;
+        req3_cmd_in <= PCmd;
+        req4_cmd_in <= PCmd;
+    
+        req1_data_in <= PData;
+        req2_data_in <= PData;
+        req3_data_in <= PData;
+        req4_data_in <= PData;
+
+        req1_tag_in <= PTag;
+        req2_tag_in <= PTag;
+        req3_tag_in <= PTag;
+        req4_tag_in <= PTag;
+        
+    end
+
+	modport Master(input PClk, output PCmd, PData, PTag, Rst);
+  	modport Monitor(input PClk, out_resp1, out_resp2, out_resp3, out_resp4,
+                        out_data1, out_data2, out_data3, out_data4,
+                        out_tag1, out_tag2, out_tag3, out_tag4
+                        );
+  
+  	modport Slave(input   req1_cmd_in, req2_cmd_in, req3_cmd_in, req4_cmd_in,
+                        req1_data_in, req2_data_in, req3_data_in, req4_data_in,
+                        req1_tag_in, req2_tag_in, req3_tag_in, req4_tag_in,
+                output  out_resp1, out_resp2, out_resp3, out_resp4,
+                        out_data1, out_data2, out_data3, out_data4,
+                        out_tag1, out_tag2, out_tag3, out_tag4
+                );
   
 
 endinterface

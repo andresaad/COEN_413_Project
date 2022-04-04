@@ -25,7 +25,9 @@
 `include "apb_env/apb_master.sv"
 `include "apb_env/apb_monitor.sv"
 `include "apb_env/apb_gen.sv"
+`include "apb_env/apb_result.sv"
 `include "env/scoreboard.sv"
+
 
 ////////////////////////////////////////////////////////////
 class test_cfg;
@@ -53,7 +55,9 @@ class env;
 
   // APB transaction mailbox. Used to pass transaction
   // from APB gen to APB master, master to scoreboard, and monitor to scoreboard
-  mailbox #(apb_trans) gen2mas, mas2scb, mon2scb;
+  mailbox #(apb_trans) gen2mas, mas2scb;
+  mailbox #(calc_result)mon2scb;
+
 
   virtual apb_if aif;
 
@@ -64,6 +68,7 @@ class env;
     mas2scb   = new();
     mon2scb   = new();
     tcfg      = new();
+
     if (!tcfg.randomize()) 
       begin
         $display("test_cfg::randomize failed");

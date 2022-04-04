@@ -80,65 +80,36 @@ class apb_master;
     endtask: main
 
 
-    // Reset the DUT then go to active mode
-    task reset();
-      `APB_MASTER_IF.Rst <= 0;
-      idle();
-      #5 `APB_MASTER_IF.Rst <= 1;
+  // Sent the calc request to all 4 ports of the Calc
+  task  sendRequest(apb_request tr);
+     // Drive Control bus
+     @(posedge `APB_IF.PClk)
+     //#50;
+     `APB_MASTER_IF.PCmd  <= tr.cmd;
+     `APB_MASTER_IF.PData <= tr.data;
+     `APB_MASTER_IF.PTag <= tr.tag;
+     
+     @(posedge `APB_MASTER_IF.PClk)
+     //#50;
+     `APB_MASTER_IF.PCmd  <= 4'b0000;
+     `APB_MASTER_IF.PData <= tr.data2;
+     `APB_MASTER_IF.PTag <= 2'b00;
+     
+     mas2scb.put(tr);
+  endtask: sendRequest
+  
+  task reset();
+      `APB_MASTER_IF.Rst <= 1;
+      `APB_MASTER_IF.PCmd  <= 0;
+      `APB_MASTER_IF.PData <= 0;
+      `APB_MASTER_IF.PTag <= 0;
+      repeat(4) @(posedge `CALC_MASTER_IF.PClk);
+      //#20 `CALC_MASTER_IF.Rst <= 0;
+      `CALC_MASTER_IF.Rst <= 0;
    endtask: reset
-
-
-    // Put the APB Bus in idle mode
-    task idle();
-      `APB_MASTER_IF.PAddr   <= 0;
-      `APB_MASTER_IF.PSel    <= 0;
-      `APB_MASTER_IF.PWData  <= 0;
-      `APB_MASTER_IF.PEnable <= 0;
-      `APB_MASTER_IF.PWrite  <= 0;
-      #1 `APB_MASTER_IF.PWrite  <= 0;
-   endtask: idle
-
-
-   // Implementation of the read() method
-   //    - drives the address bus,
-   //    - select the  bus,
-   //    - assert Penable signal,
-   //    - read the data and return it.
-   task read(apb_trans tr);
-     // Drive Control bus
-     `APB_MASTER_IF.PAddr  <= tr.addr;
-     `APB_MASTER_IF.PWrite <= 1'b0;
-     `APB_MASTER_IF.PSel   <= 1'b1;
-
-     // Assert Penable
-     #1 `APB_MASTER_IF.PEnable <= 1'b1;
-
-     // Deassert Penable & return the read data
-     #1 `APB_MASTER_IF.PEnable <= 1'b0;
-     tr.data = `APB_MASTER_IF.PRData;
-     mas2scb.put(tr);
-  endtask: read
-        
-
-  // Perform a write cycle
-   //    - Drive the address bus,
-   //    - Select the  bus,
-   //    - Drive data bus
-   //    - Assert Penable signal,
-  task  write(apb_trans tr);
-     // Drive Control bus
-     `APB_MASTER_IF.PAddr  <= tr.addr;
-     `APB_MASTER_IF.PWData <= tr.data;
-     `APB_MASTER_IF.PWrite <= 1'b1;
-     `APB_MASTER_IF.PSel   <= 1'b1;
-
-     // Assert Penable
-     #1 `APB_MASTER_IF.PEnable <= 1'b1;
-
-     // Deassert it
-     #1 `APB_MASTER_IF.PEnable <= 1'b0;
-     mas2scb.put(tr);
-  endtask: write
 
 endclass: apb_master
 
+
+  
+    

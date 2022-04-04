@@ -15,8 +15,11 @@
  *******************************************************************************
  */
 `include "apb_env/apb_trans.sv"
+`include "apb_env/result.sv"
 
 class scoreboard;
+
+  typedef enum {CORRECT, INCORRECT} calc_result_check;
 
   // Verbosity level
   bit verbose;
@@ -29,102 +32,143 @@ class scoreboard;
   int match;
 
   // Transaction coming in
-  mailbox #(apb_trans) mas2scb, mon2scb;
+  mailbox #(apb_trans) mas2scb;
+  mailbox #(apb_result) mon2scb;
+
+  //Result of calc_request
+  apb_result_check res_check;
+  //request and result objects
+  apb_request mas_tr;
+  apb_result mon_tr;
+
+  //others   
+  bit [31:0] expected_data_array[3:0];
+  bit [31:0] exp_val;
+  calc_request request_array[3:0];
     
+	covergroup cg_input;
+        //input request
+        request_cmd: coverpoint mas_tr.cmd {
+          bins a = {4'b0001};
+          bins b = {4'b0010};
+          bins c = {4'b0101}; 
+          bins d = {4'b0110};
+        }
+        request_data: coverpoint mas_tr.data;
+        request_data2: coverpoint mas_tr.data2;
+    endgroup
+    
+    covergroup cg_output;
+        
+        //output value
+        output_resp: coverpoint mon_tr.out_Resp{
+          bins a = {2'b01};
+          bins b = {2'b10};
+        }
+        output_data: coverpoint mon_tr.out_Data;
+        output_correctness: coverpoint res_check;
+    endgroup
 
   // Constructor
-  function new(int max_trans_cnt, mailbox #(apb_trans) mas2scb, mon2scb, bit verbose=0);
+  function new(int max_trans_cnt, mailbox #(calc_request) mas2scb, mailbox #(calc_result) mon2scb, bit verbose=0);
     this.max_trans_cnt = max_trans_cnt;
+	this.mon2scb       = mon2scb;
     this.mas2scb       = mas2scb;
-    this.mon2scb       = mon2scb; 
     this.verbose       = verbose;
+    
+    cg_input = new();
+    cg_output = new();
   endfunction
+  
+
 
 
   // Method to receive transactions from master and monitor
   task main();
-    apb_trans mas_tr, mon_tr;
-    reg [APB_DATA_WIDTH-1:0] exp_data;
-
-    $display($time, ": Starting scoreboard for %0d transaction", max_trans_cnt);
-
-    forever
-      begin
-
-        // Since this device operates as a transfer function, the self-checking 
-        // mechanism is quite simple. The scoreboard first waits for a
-        // transaction to be generated then waits for the monitor to notify that 
-        // this transaction occurred.  In order to determine the transaction 
-        // correctness the following rules are applied:
-        //   - Each generated WRITE transactions are stored to a register file 
-        //    (which acts as a reference model in this case).
-        //   - Each generated READ transactions get their data field filled from 
-        //     the register file (so to provide an expected result).
-        //   - each transactions is then compared on a first-come first-serve basis.
-        mas2scb.get(mas_tr);
-        mon2scb.get(mon_tr);
-
-        exp_data = $root.top.m1.memory_read(mas_tr.addr);
-
-        // First compare the two transactions: master & monitor
-        if (mas_tr.transaction != mon_tr.transaction)
-          $display("@%0d: ERROR master transaction type (%s) does not match monitor (%s)",
-                   $time, mas_tr.transaction.name, mon_tr.transaction.name);
-        else if (mas_tr.addr != mon_tr.addr)
-          $display("@%0d: ERROR master transaction addr(%h) does not match monitor (%h)",
-                   $time, mas_tr.addr, mon_tr.addr);
-        else begin
-
-          // Okay, now does the transaction match the memory?
-        case(mas_tr.transaction) 
-          WRITE: 
-            begin
-              // Check that master data == monitor data
-              if (mas_tr.data != mon_tr.data)
-                $display("@%0d: ERROR master transaction data(%h) does not match monitor (%h)",
-                         $time, mas_tr.data, mon_tr.data);
-
-              // Okay, the two transactions match, did the right stuf get into memory?
-              else if (mas_tr.data != exp_data)
-                $display("@%0d: ERROR master transaction data(%h) does not match memory (%h)",
-                         $time, mas_tr.data, exp_data);
-              else
+    fork
+        forever begin
+            mas2scb.get(mas_tr);//input
+            
+            //Perform covergroup sampling
+            cg_input.sample();
+            
+            request_array[mas_tr.tag] = mas_tr;
+            
+            case(mas_tr.cmd)
+        
+            //check for addition
+            4'b0001:
                 begin
-                  match++;
-                  if(verbose)
-                    $display("@%0d: Data match Addr=%H Data=%H", $time, mon_tr.addr, mon_tr.data);
+                    exp_val = mas_tr.data + mas_tr.data2;
+                    
+                    //put result into the array
+                    expected_data_array[mas_tr.tag] = exp_val;
                 end
-            end // case: WRITE
 
-          READ:  
-            begin
-              // Okay, the two transactions match, did the right stuf get into memory?
-              if (mon_tr.data != exp_data)
-                $display("@%0d: ERROR monitor transaction data(%h) does not match memory (%h)",
-                         $time, mon_tr.data, exp_data);
-              else
+            //check for sub				
+            4'b0010:
                 begin
-                  match++;
-                  if(verbose)
-                    $display("@%0d: Data match Addr=%H Data=%H", $time, mon_tr.addr, mon_tr.data);
+                    exp_val = mas_tr.data - mas_tr.data2;
+                    
+                    //put result into the array
+                    expected_data_array[mas_tr.tag] = exp_val;				
                 end
-            end // case: READ
 
+            //check for left shift				
+            4'b0101:
+                begin
+                    exp_val = mas_tr.data << mas_tr.data2[4:0];
+                    
+                    //put result into the array
+                    expected_data_array[mas_tr.tag] = exp_val;
+                end
+
+            //check for right shift				
+            4'b0110:
+                begin
+                    exp_val = mas_tr.data >> mas_tr.data2[4:0];
+                    
+                    //put result into the array
+                    expected_data_array[mas_tr.tag] = exp_val;
+                end
+
+            
           default:
-            begin
-              $display("@%0d: Fatal error: Scoreboard received illegal master transaction '%s'", 
-                       $time, mas_tr.transaction.name);
-              $finish;
+                begin
+                  $display("@%0d: Fatal error: Scoreboard received illegal master transaction", 
+                           $time);
+                  //$finish;
+                end
+            endcase
+        end
+        
+        forever begin
+            mon2scb.get(mon_tr);//output
+            
+            //assuming the result is correct at first
+            res_check = CORRECT;
+            
+            exp_val = expected_data_array[mon_tr.out_Tag];
+            
+            if (mon_tr.out_Resp === 2'b00)
+              $display("WRONG");
+            
+            if (mon_tr.out_Data !== exp_val) begin
+                $display("@%0d: On port #: %d, Cmd: %40b, Data1: %h, Data2: %h, ERROR monitor data (%h) does not match expected value (%h)",
+                    $time, mon_tr.out_Port, request_array[mon_tr.out_Tag].cmd, request_array[mon_tr.out_Tag].data, request_array[mon_tr.out_Tag].data2, mon_tr.out_Data, exp_val);
+                res_check = INCORRECT;
             end
-        endcase
-        end // else: !if(mas_tr.addr != mon_tr.addr)
-        
-        // Determine if the end of test has been reached
-        if(--max_trans_cnt<1)
-          ->ended;
-        
-      end // forever
+            
+            //Perform covergroup sampling
+            cg_output.sample();
+            
+            // Determine if the end of test has been reached
+            if(--max_trans_cnt<1)
+              ->ended;
+            
+        end // forever
+    join_none
+    
   endtask
 
 endclass
-
