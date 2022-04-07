@@ -21,7 +21,7 @@
 
 class apb_gen;
 
-  // Random APB transaction
+  // Random transaction for Calculator
   rand apb_trans rand_tr;
 
   // Test terminates when the trans_cnt is greater
@@ -51,13 +51,13 @@ class apb_gen;
   // Method aimed at generating transactions
   task main();
     if(verbose)
-      $display($time, ": Starting apb_gen for %0d transactions", 
-               max_trans_cnt);
+      $display($time, ": Starting Verifications for %0d transactions", max_trans_cnt);
     
     // Start this daemon as long as there is a transaction 
     // to be proceeded)
     while(!end_of_test())
       begin
+        // Declares transaction object
         apb_trans my_tr;
         
         // Wait & Get a transaction
@@ -65,7 +65,7 @@ class apb_gen;
   
         // Increment the number of sent transactions
         if(my_tr.transaction != IDLE)
-          ++trans_cnt;
+          ++trans_cnt; //Increase Transaction Count
   
         if(verbose)
           my_tr.display("Generator");
@@ -74,7 +74,7 @@ class apb_gen;
       end // while (!end_of_test())
         
     if(verbose) 
-      $display($time, ": Ending apb_gen\n");
+      $display($time, ": Ending Generator \n");
   
     ->ended;
 

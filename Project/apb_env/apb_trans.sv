@@ -20,23 +20,29 @@
 
 class apb_trans;
    
-    rand bit [3:0] cmd;
-    rand bit [31:0] data;
-    rand bit [31:0] data2;
-    static int count=0;
-    bit [1:0] tag;
-    int id, trans_cnt;
+    rand bit [3:0] cmd; //COMMAND
+    rand bit [31:0] data; //DATA #1 
+    rand bit [31:0] data2; // DATA #2
+
+    static int count=0; //counter
+
+    bit [1:0] tag; //identifies the command when the response is received.
+
+    int id, trans_cnt; //ID and Transaction Count
 
     function void display(string prefix);
         case (this.transaction)
           READ:
-            $display($time, ": %s Read  CMD =0x%02X Data=0x%02X id=%0d",
-                   prefix, addr, data, id);
+            $display($time, ": %s Read  CMD =0x%02X Data=0x%02X Data2=0x%02X id=%0d",
+                   prefix, cmd, data, data2, id);
+
           WRITE:
-            $display($time, ": %s Write CMD =0x%02X Data=0x%02X id=%0d",
-                   prefix, cmd, data, id);
+            $display($time, ": %s Write CMD =0x%02X Data=0x%02X Data2=0x%02X id=%0d",
+                   prefix, cmd, data,data2, id);
+
           default:
             $display($time, ": %s Idle  --------------------------", prefix);
+
         endcase
   endfunction: display
 
@@ -46,7 +52,7 @@ class apb_trans;
     endfunction
 
     
-  function apb_trans copy();
+  function apb_trans copy(); //Copy Constructor
     apb_trans to   = new();
     to.cmd        = this.cmd;
     to.data        = this.data;

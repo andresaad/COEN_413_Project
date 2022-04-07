@@ -30,7 +30,7 @@
 
 
 ////////////////////////////////////////////////////////////
-class test_cfg;
+class test_cfg; // Test Configuration
 
   // Test terminates when the trans_cnt is greater than max_trans_cnt member
   rand int trans_cnt;
@@ -59,21 +59,23 @@ class env;
   mailbox #(calc_result)mon2scb;
 
 
-  virtual apb_if aif;
+  virtual apb_if aif; // Virtual Interface
 
 
   function new(virtual apb_if aif);
     this.aif  = aif;
-    gen2mas   = new();
+    gen2mas   = new(); //Mailbox between Generator and Master
     mas2scb   = new();
     mon2scb   = new();
     tcfg      = new();
 
+// Checks randomization
     if (!tcfg.randomize()) 
       begin
         $display("test_cfg::randomize failed");
         $finish;
       end
+
     gen      = new(gen2mas, tcfg.trans_cnt, 1);
     mst      = new(this.aif, gen2mas, mas2scb, 1);
     mon      = new(this.aif, mon2scb);

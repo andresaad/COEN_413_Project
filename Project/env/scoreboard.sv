@@ -35,8 +35,11 @@ class scoreboard;
   mailbox #(apb_trans) mas2scb;
   mailbox #(apb_result) mon2scb;
 
+
+
   //Result of calc_request
   apb_result_check res_check;
+
   //request and result objects
   apb_request mas_tr;
   apb_result mon_tr;
@@ -49,16 +52,16 @@ class scoreboard;
 	covergroup cg_input;
         //input request
         request_cmd: coverpoint mas_tr.cmd {
-          bins a = {4'b0001};
-          bins b = {4'b0010};
-          bins c = {4'b0101}; 
-          bins d = {4'b0110};
+          bins a = {4'b0001}; // ADDITION
+          bins b = {4'b0010}; // SUBSTRACTION
+          bins c = {4'b0101}; // LSL
+          bins d = {4'b0110}; //LSR
         }
         request_data: coverpoint mas_tr.data;
         request_data2: coverpoint mas_tr.data2;
-    endgroup
+  endgroup
     
-    covergroup cg_output;
+  covergroup cg_output;
         
         //output value
         output_resp: coverpoint mon_tr.out_Resp{
@@ -67,12 +70,12 @@ class scoreboard;
         }
         output_data: coverpoint mon_tr.out_Data;
         output_correctness: coverpoint res_check;
-    endgroup
+  endgroup
 
   // Constructor
   function new(int max_trans_cnt, mailbox #(calc_request) mas2scb, mailbox #(calc_result) mon2scb, bit verbose=0);
     this.max_trans_cnt = max_trans_cnt;
-	this.mon2scb       = mon2scb;
+	  this.mon2scb       = mon2scb;
     this.mas2scb       = mas2scb;
     this.verbose       = verbose;
     
@@ -87,10 +90,10 @@ class scoreboard;
   task main();
     fork
         forever begin
-            mas2scb.get(mas_tr);//input
+            mas2scb.get(mas_tr);// Receives input from mailbox
             
             //Perform covergroup sampling
-            cg_input.sample();
+            cg_input.sample(); //BUILT IN
             
             request_array[mas_tr.tag] = mas_tr;
             
@@ -100,7 +103,6 @@ class scoreboard;
             4'b0001:
                 begin
                     exp_val = mas_tr.data + mas_tr.data2;
-                    
                     //put result into the array
                     expected_data_array[mas_tr.tag] = exp_val;
                 end
@@ -132,15 +134,15 @@ class scoreboard;
                     expected_data_array[mas_tr.tag] = exp_val;
                 end
 
-            
-          default:
-                begin
-                  $display("@%0d: Fatal error: Scoreboard received illegal master transaction", 
-                           $time);
-                  //$finish;
-                end
-            endcase
-        end
+                  
+                default:
+                      begin
+                        $display("@%0d: Fatal error: Scoreboard received illegal master transaction", 
+                                $time);
+                        //$finish;
+                      end
+                  endcase
+              end
         
         forever begin
             mon2scb.get(mon_tr);//output
