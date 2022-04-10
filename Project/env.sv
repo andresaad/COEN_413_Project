@@ -20,13 +20,13 @@
  */
 
 
-`include "apb_env/apb_trans.sv"
-`include "apb_env/apb_if.sv"
-`include "apb_env/apb_master.sv"
-`include "apb_env/apb_monitor.sv"
-`include "apb_env/apb_gen.sv"
-`include "apb_env/apb_result.sv"
-`include "env/scoreboard.sv"
+`include "apb_trans.sv"
+`include "apb_if.sv"
+`include "apb_master.sv"
+`include "apb_monitor.sv"
+`include "apb_gen.sv"
+`include "apb_result.sv"
+`include "scoreboard.sv"
 
 
 ////////////////////////////////////////////////////////////

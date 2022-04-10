@@ -16,7 +16,7 @@
  *******************************************************************************
  */
 
-`include "apb_env/apb_trans.sv"
+`include "apb_trans.sv"
 
 class apb_gen;
 
