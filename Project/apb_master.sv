@@ -18,7 +18,7 @@
 
 
 `define APB_MASTER_IF	apb_master_if.master_cb
-`include "apb_env/apb_trans.sv"
+`include "apb_trans.sv"
 
   
 class apb_master;

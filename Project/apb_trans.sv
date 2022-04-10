@@ -16,7 +16,7 @@
 `ifndef APB_IF_DEFINE
 `define APB_IF_DEFINE
 
-`include "hdl/root.sv"
+`include "root.sv"
 
 class apb_trans;
    
