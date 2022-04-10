@@ -1,18 +1,4 @@
-/***************************************************************************
- *
- * File:        $RCSfile: apb_trans.sv,v $
- * Revision:    $Revision: 1.5 $  
- * Date:        $Date: 2003/07/02 15:47:08 $
- *
- *******************************************************************************
- *
- * APB Transaction Structure
- *
- *******************************************************************************
- * Copyright (c) 1991-2005 by Synopsys Inc.  ALL RIGHTS RESERVED.
- * CONFIDENTIAL AND PROPRIETARY INFORMATION OF SYNOPSYS INC.
- *******************************************************************************
- */
+
 `ifndef APB_IF_DEFINE
 `define APB_IF_DEFINE
 
