@@ -68,10 +68,10 @@ class apb_master;
 
 
   // This task drives the transcation objects to the interface signals
-  task  drive(apb_request tr);
+  task  drive(apb_trans tr);
   
     // FIRST COMMAND
-     @(posedge `APB_IF.PClk)
+     @(posedge `APB_MASTER_IF.PClk)
      `APB_MASTER_IF.PCmd  <= tr.cmd; // COMMAND 
      `APB_MASTER_IF.PData <= tr.data;
      `APB_MASTER_IF.PTag <= tr.tag;
@@ -84,7 +84,7 @@ class apb_master;
      
      mas2scb.put(tr); // Putting transaction into Master-Scoreboard Mailbox
      trans_cnt++; // Increasing Transaction Count
-  endtask: sendRequest
+  endtask: drive
   
   task idle();
     `APB_MASTER_IF.PCmd  <= 0;
@@ -98,7 +98,7 @@ class apb_master;
       `APB_MASTER_IF.PData <= 0;
       `APB_MASTER_IF.PTag <= 0;
 
-      $display("Ports Succesfully Reset")
+      $display("Ports Succesfully Reset");
    endtask: reset
 
 endclass: apb_master

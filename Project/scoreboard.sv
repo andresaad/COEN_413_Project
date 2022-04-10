@@ -16,8 +16,9 @@
  */
 
 
-`include "apb_env/apb_trans.sv"
-`include "apb_env/result.sv"
+`include "apb_trans.sv"
+`include "apb_result.sv"
+
 
 class scoreboard;
 
@@ -37,13 +38,13 @@ class scoreboard;
   mailbox #(apb_trans) mas2scb, mon2scb;
 
   //request and result objects
-  apb_request mas_tr;
-  result mon_tr;
+  apb_trans mas_tr;
+  apb_result mon_tr;
 
   //others   
   bit [31:0] expected_data_array[3:0];
   bit [31:0] exp_val;
-  calc_request request_array[3:0];
+  apb_trans request_array[3:0];
     
 
   // Covergroup for command inputs  
@@ -69,11 +70,11 @@ class scoreboard;
           bins b = {2'b10};
         }
         output_data: coverpoint mon_tr.out_Data;
-        output_correctness: coverpoint res_check;
+        //output_correctness: coverpoint res_check;
   endgroup
 
   // Constructor
-  function new(int max_trans_cnt, mailbox #(calc_request) mas2scb, mon2scb, bit verbose=0);
+  function new(int max_trans_cnt, mailbox #(apb_trans) mas2scb, mon2scb, bit verbose=0);
     this.max_trans_cnt = max_trans_cnt;
 	  this.mon2scb       = mon2scb;
     this.mas2scb       = mas2scb;

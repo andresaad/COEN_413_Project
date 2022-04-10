@@ -20,6 +20,7 @@
 
 `define APB_MONITOR_IF	apb_monitor_if.monitor_cb
 `include "apb_trans.sv"
+`include "apb_result.sv" 
 
 
 class apb_monitor;
