@@ -31,11 +31,14 @@ class apb_master;
 
     // Verbosity level
     bit verbose;
+
+    // Transaction Count
+    int trans_cnt;
   
     // Constructor
-    function new(virtual apb_if.Master apb_master_if, mailbox #(apb_trans) gen2mas, mas2scb, bit verbose=0);
-      this.gen2mas       = gen2mas; // Generator Mailbox
-      this.mas2scb       = mas2scb; // Master Mailbox
+    function new(virtual apb_if.Master apb_master_if, mailbox #(apb_trans) gen2mas,mas2scb, bit verbose=0);
+      this.gen2mas       = gen2mas; // Generator-Master Mailbox
+      this.mas2scb       = mas2scb; // Master-Scoreboard Mailbox
       this.apb_master_if = apb_master_if; // Master Interface
       this.verbose       = verbose; // Verbose
     endfunction: new
@@ -44,63 +47,50 @@ class apb_master;
     // Main daemon. Runs forever to switch APB transaction to
     // corresponding read/write/idle command
     task main();
-
         // Create Transaction Object
        apb_trans tr;
 
        if(verbose)
-         $display($time, ": Starting apb_master");
+         $display($time, " - Starting MASTER - ");
 
        forever begin
 
         // Wait & get a transaction from mailbox
         gen2mas.get(tr);
-  
-        // Decide what to do now with the incoming transaction
-        case (tr.transaction)
-          // Read cycle
-          READ:
-            read(tr); //Read Transaction
-
-          // Write cycle
-          WRITE:
-            write(tr);  // Write Transaction
-
-          // Idle cycle
-          default:
-            idle();
-        endcase
-
-        if(verbose)
-          tr.display("- Master -");
+        drive(tr); 
       end
 
        if(verbose)
-         $display($time, ": Ending apb_master");
+         $display($time, "- Ending Master - ");
 
     endtask: main
 
 
 
-  // Sent the calc request to all 4 ports of the Calc
-  task  sendRequest(apb_request tr);
-     // Drive Control bus
+  // This task drives the transcation objects to the interface signals
+  task  drive(apb_request tr);
+  
+    // FIRST COMMAND
      @(posedge `APB_IF.PClk)
-     //#50;
-     `APB_MASTER_IF.PCmd  <= tr.cmd;
+     `APB_MASTER_IF.PCmd  <= tr.cmd; // COMMAND 
      `APB_MASTER_IF.PData <= tr.data;
      `APB_MASTER_IF.PTag <= tr.tag;
      
+     // SEOCND COMMAND
      @(posedge `APB_MASTER_IF.PClk)
-     //#50;
-     `APB_MASTER_IF.PCmd  <= 4'b0000;
+     `APB_MASTER_IF.PCmd  <= 4'b0000; // COMMAND = 0
      `APB_MASTER_IF.PData <= tr.data2;
      `APB_MASTER_IF.PTag <= 2'b00;
      
-     mas2scb.put(tr);
+     mas2scb.put(tr); // Putting transaction into Master-Scoreboard Mailbox
+     trans_cnt++; // Increasing Transaction Count
   endtask: sendRequest
   
-
+  task idle();
+    `APB_MASTER_IF.PCmd  <= 0;
+    `APB_MASTER_IF.PData <= 0;
+    `APB_MASTER_IF.PTag <= 0;
+  endtask: idle
 
   task reset();
       `APB_MASTER_IF.Rst <= 1;
@@ -108,10 +98,7 @@ class apb_master;
       `APB_MASTER_IF.PData <= 0;
       `APB_MASTER_IF.PTag <= 0;
 
-      // WHY 4 TIMES
-      repeat(4) @(posedge `CALC_MASTER_IF.PClk);
-      //#20 `CALC_MASTER_IF.Rst <= 0;
-      `CALC_MASTER_IF.Rst <= 0;
+      $display("Ports Succesfully Reset")
    endtask: reset
 
 endclass: apb_master

@@ -55,11 +55,10 @@ class env;
 
   // APB transaction mailbox. Used to pass transaction
   // from APB gen to APB master, master to scoreboard, and monitor to scoreboard
-  mailbox #(apb_trans) gen2mas, mas2scb;
-  mailbox #(calc_result)mon2scb;
-
-
-  virtual apb_if aif; // Virtual Interface
+  mailbox #(apb_trans) gen2mas, mas2scb, mon2scb;
+  
+  // Virtual Interface
+  virtual apb_if aif; 
 
 
   function new(virtual apb_if aif);
@@ -72,7 +71,7 @@ class env;
 // Checks randomization
     if (!tcfg.randomize()) 
       begin
-        $display("test_cfg::randomize failed");
+        $display("Test Configuration : Randomization failed");
         $finish;
       end
 
@@ -98,7 +97,7 @@ class env;
     mst.reset();
     fork
       gen.main();
-    join_none
+    join_any
   endtask: test
 
 
@@ -111,9 +110,9 @@ class env;
 
 
   task run();
-    pre_test();
-    test();
-    post_test();
+    pre_test(); // Rum Pre-test
+    test();     // Run Test
+    post_test();// Run Post-Test
   endtask: run
 
 endclass: env

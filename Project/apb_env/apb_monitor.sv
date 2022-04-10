@@ -48,52 +48,63 @@ class apb_monitor;
     forever begin
       @(posedge calc_monitor_if.PClk)
 
-      // If output response = 0 
-      // // Check for response from port 1
+      // Output from Port 1
       if (`APB_MONITOR_IF.out_resp1 !== 2'b00) begin
-        this.tr = new; //Instantiate New result object
+
+        // New Transaction
+        this.tr = new; 
+
+        $display("Output from Port 1");
         tr.out_Resp = `APB_MONITOR_IF.out_resp1;
         tr.out_Data = `APB_MONITOR_IF.out_data1;
         tr.out_Tag = `APB_MONITOR_IF.out_tag1;
-        tr.out_Port = 1; //out_Port should be an intege
-        // Pass the transaction to the scoreboard
+        tr.out_Port = 1; 
         mon2scb.put(tr);
       end
       
-      // Check for response from port 2
+      // Output from Port 2
       if (`APB_MONITOR_IF.out_resp2 !== 2'b00) begin
+
+        // New Transaction
         this.tr = new;
+
+        $display("Output from Port 2");
         tr.out_Resp = `APB_MONITOR_IF.out_resp2;
         tr.out_Data = `APB_MONITOR_IF.out_data2;
         tr.out_Tag = `APB_MONITOR_IF.out_tag2;
-        tr.out_Port = 2; //out_Port should be an integer
-        // Pass the transaction to the scoreboard
+        tr.out_Port = 2; 
         mon2scb.put(tr);
       end
       
-      // Check for response from port 3
+      // Output from Port 3
       if (`APB_MONITOR_IF.out_resp3 !== 2'b00) begin
+
+        // New Transaction
         this.tr = new;
+
+        $display("Output from Port 3");
         tr.out_Resp = `APB_MONITOR_IF.out_resp3;
         tr.out_Data = `APB_MONITOR_IF.out_data3;
         tr.out_Tag = `APB_MONITOR_IF.out_tag3;
-        tr.out_Port = 3; //out_Port should be an integer
-        // Pass the transaction to the scoreboard
+        tr.out_Port = 3; 
         mon2scb.put(tr);
       end
       
-      // Check for response from port 4
+      // Output from Port 4
       if (`APB_MONITOR_IF.out_resp4 !== 2'b00) begin
+        
+        // New Transaction
         this.tr = new;
+
+        $display("Output from Port 4");
         tr.out_Resp = `APB_MONITOR_IF.out_resp4;
         tr.out_Data = `APB_MONITOR_IF.out_data4;
         tr.out_Tag = `APB_MONITOR_IF.out_tag4;
-        tr.out_Port = 4; //out_Port should be an integer
-        // Pass the transaction to the scoreboard
+        tr.out_Port = 4; 
         mon2scb.put(tr);
       end
 
-    end // forever
+    end
   endtask: main
 endclass: apb_monitor
 
