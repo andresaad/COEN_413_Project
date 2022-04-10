@@ -25,8 +25,8 @@
 `include "apb_master.sv"
 `include "apb_monitor.sv"
 `include "apb_gen.sv"
-`include "apb_result.sv"
 `include "scoreboard.sv"
+`include "apb_result.sv"
 
 
 ////////////////////////////////////////////////////////////

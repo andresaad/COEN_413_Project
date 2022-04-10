@@ -59,10 +59,8 @@ class apb_gen;
         //apb_trans my_tr;
         rand_tr = new();
 
-        if(!rand_tr.randomize()) $fatal("Generator : Randomization Failed")
+        if(!rand_tr.randomize()) $fatal("Generator : Randomization Failed");
       
-        // Increment the number of sent transactions
-        if(rand_tr != IDLE)
           ++trans_cnt; //Increase Transaction Count
   
         if(verbose)

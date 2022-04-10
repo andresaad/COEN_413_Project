@@ -47,18 +47,18 @@ class apb_trans;
   constraint isolateport4 { port == 4; }
 
 // Testing Individual Commands
-  constraint isolateAdd { cmd == 1} //Add
-  constraint isolateSub { cmd == 2} //Sub
-  constraint isolateLSL { cmd == 5} //Shift Right
-  constraint isolateLSR { cmd == 6} //Shift Left
+  constraint isolateAdd { cmd == 1;} //Add
+  constraint isolateSub { cmd == 2;} //Sub
+  constraint isolateLSL { cmd == 5;} //Shift Right
+  constraint isolateLSR { cmd == 6;} //Shift Left
 
 
   //Copy Constructor
   function apb_trans copy(); 
-      apb_trans to   = new();
-      to.cmd        = this.cmd;
-      to.data        = this.data;
-      to.data2 	  = this.data2
+      apb_trans to = new();
+      to.cmd = this.cmd;
+      to.data = this.data;
+      to.data2 = this.data2;
       to.tag = this.tag;
       to.port = this.port;
       copy = to;
