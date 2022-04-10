@@ -16,7 +16,6 @@
  *******************************************************************************
  */
 
-
 `include "apb_env/apb_trans.sv"
 
 class apb_gen;
@@ -48,30 +47,29 @@ class apb_gen;
     rand_tr            = new;
   endfunction
 
-  // Method aimed at generating transactions
+
+  // Method aimed at Generating transactions
   task main();
     if(verbose)
       $display($time, ": Starting Verifications for %0d transactions", max_trans_cnt);
-    
-    // Start this daemon as long as there is a transaction 
-    // to be proceeded)
-    while(!end_of_test())
+
+    while((trans_cnt <= max_trans_cnt))
       begin
         // Declares transaction object
-        apb_trans my_tr;
-        
-        // Wait & Get a transaction
-        my_tr = get_transaction();
-  
+        //apb_trans my_tr;
+        rand_tr = new();
+
+        if(!rand_tr.randomize()) $fatal("Generator : Randomization Failed")
+      
         // Increment the number of sent transactions
-        if(my_tr.transaction != IDLE)
+        if(rand_tr != IDLE)
           ++trans_cnt; //Increase Transaction Count
   
         if(verbose)
-          my_tr.display("Generator");
+          rand_tr.display("Generator");
 
-        gen2mas.put(my_tr);
-      end // while (!end_of_test())
+         gen2mas.put(rand_tr);
+      end 
         
     if(verbose) 
       $display($time, ": Ending Generator \n");
@@ -79,23 +77,6 @@ class apb_gen;
     ->ended;
 
   endtask
-
-
-  // Returns TRUE when the test should stop
-  virtual function bit end_of_test();
-    end_of_test = (trans_cnt >= max_trans_cnt);
-  endfunction
-    
-  // Returns a transaction (associated with tr member)
-  virtual function apb_trans get_transaction();
-    rand_tr.trans_cnt = trans_cnt;
-    if (! this.rand_tr.randomize())
-      begin
-        $display("apb_gen::randomize failed");
-        $finish;
-      end
-    return rand_tr.copy();
-  endfunction
     
 endclass
 

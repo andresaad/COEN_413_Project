@@ -14,6 +14,8 @@
  * CONFIDENTIAL AND PROPRIETARY INFORMATION OF SYNOPSYS INC.
  *******************************************************************************
  */
+
+
 `include "apb_env/apb_trans.sv"
 `include "apb_env/result.sv"
 
@@ -32,23 +34,19 @@ class scoreboard;
   int match;
 
   // Transaction coming in
-  mailbox #(apb_trans) mas2scb;
-  mailbox #(apb_result) mon2scb;
-
-
-
-  //Result of calc_request
-  apb_result_check res_check;
+  mailbox #(apb_trans) mas2scb, mon2scb;
 
   //request and result objects
   apb_request mas_tr;
-  apb_result mon_tr;
+  result mon_tr;
 
   //others   
   bit [31:0] expected_data_array[3:0];
   bit [31:0] exp_val;
   calc_request request_array[3:0];
     
+
+  // Covergroup for command inputs  
 	covergroup cg_input;
         //input request
         request_cmd: coverpoint mas_tr.cmd {
@@ -61,6 +59,8 @@ class scoreboard;
         request_data2: coverpoint mas_tr.data2;
   endgroup
     
+
+  //  Covergroup for DUT Outputs
   covergroup cg_output;
         
         //output value
@@ -73,7 +73,7 @@ class scoreboard;
   endgroup
 
   // Constructor
-  function new(int max_trans_cnt, mailbox #(calc_request) mas2scb, mailbox #(calc_result) mon2scb, bit verbose=0);
+  function new(int max_trans_cnt, mailbox #(calc_request) mas2scb, mon2scb, bit verbose=0);
     this.max_trans_cnt = max_trans_cnt;
 	  this.mon2scb       = mon2scb;
     this.mas2scb       = mas2scb;
@@ -90,85 +90,71 @@ class scoreboard;
   task main();
     fork
         forever begin
-            mas2scb.get(mas_tr);// Receives input from mailbox
+            // Receives input from mailbox
+            mas2scb.get(mas_tr);
             
-            //Perform covergroup sampling
-            cg_input.sample(); //BUILT IN
+            //Perform covergroup sampling using built in sample()
+            cg_input.sample(); 
             
             request_array[mas_tr.tag] = mas_tr;
             
+            // Swithc for input command
             case(mas_tr.cmd)
         
-            //check for addition
+            //Check for Addition --> cmd = 1
             4'b0001:
                 begin
                     exp_val = mas_tr.data + mas_tr.data2;
-                    //put result into the array
                     expected_data_array[mas_tr.tag] = exp_val;
                 end
 
-            //check for sub				
+            //Check for Subtraction --> cmd = 2		
             4'b0010:
                 begin
                     exp_val = mas_tr.data - mas_tr.data2;
-                    
-                    //put result into the array
                     expected_data_array[mas_tr.tag] = exp_val;				
                 end
 
-            //check for left shift				
+            //Check for LSL  --> cmd = 5				
             4'b0101:
                 begin
                     exp_val = mas_tr.data << mas_tr.data2[4:0];
-                    
-                    //put result into the array
                     expected_data_array[mas_tr.tag] = exp_val;
                 end
 
-            //check for right shift				
+            //Check for LRS  --> cmd = 6			
             4'b0110:
                 begin
                     exp_val = mas_tr.data >> mas_tr.data2[4:0];
-                    
-                    //put result into the array
                     expected_data_array[mas_tr.tag] = exp_val;
                 end
 
                   
                 default:
                       begin
-                        $display("@%0d: Fatal error: Scoreboard received illegal master transaction", 
-                                $time);
-                        //$finish;
+                        $display("Scoreboard --> Fatal error: Scoreboard received illegal master transaction");
                       end
                   endcase
               end
         
         forever begin
-            mon2scb.get(mon_tr);//output
-            
-            //assuming the result is correct at first
-            res_check = CORRECT;
-            
+          // 
+            mon2scb.get(mon_tr);
+      
             exp_val = expected_data_array[mon_tr.out_Tag];
-            
-            if (mon_tr.out_Resp === 2'b00)
-              $display("WRONG");
             
             if (mon_tr.out_Data !== exp_val) begin
                 $display("@%0d: On port #: %d, Cmd: %40b, Data1: %h, Data2: %h, ERROR monitor data (%h) does not match expected value (%h)",
                     $time, mon_tr.out_Port, request_array[mon_tr.out_Tag].cmd, request_array[mon_tr.out_Tag].data, request_array[mon_tr.out_Tag].data2, mon_tr.out_Data, exp_val);
-                res_check = INCORRECT;
+      
             end
             
-            //Perform covergroup sampling
-            cg_output.sample();
-            
-            // Determine if the end of test has been reached
+            cg_output.sample(); 
+        
             if(--max_trans_cnt<1)
               ->ended;
             
-        end // forever
+        end 
     join_none
     
   endtask

@@ -3,376 +3,129 @@ K3
 13
 cModel Technology
 Z0 d/home/m/m_arabia/COEN413/Project
-Xapb_gen_sv_unit
-Z1 DXx6 sv_std 3 std 0 22 F[19LRNL:5;XmIFh[XOPn1
-IFg9QlRTR5<@U5ZZ]ocQTM1
-VFg9QlRTR5<@U5ZZ]ocQTM1
-S1
-Z2 d/home/m/m_arabia/COEN413/Project
-Z3 w1648863012
-8apb_env/apb_gen.sv
-Z4 Fapb_env/apb_gen.sv
-Z5 Fapb_env/apb_trans.sv
-Z6 Fhdl/root.sv
-L2 6
-Z7 OL;L;10.1e;51
-r1
-31
-Z8 !s108 1648863324.862835
-Z9 !s107 env/scoreboard.sv|env/env.sv|apb_env/apb_monitor.sv|apb_env/apb_gen.sv|apb_env/apb_if.sv|apb_env/apb_master.sv|apb_env/apb_trans.sv|tests/test_03_cvr_driven.sv|tests/test_02_constrained.sv|tests/test_01_directed.sv|tests/test_00_debug.sv|hdl/mem.sv|hdl/root.sv|hdl/top.sv|
-Z10 !s90 hdl/top.sv|hdl/root.sv|hdl/mem.sv|tests/test_00_debug.sv|tests/test_01_directed.sv|tests/test_02_constrained.sv|tests/test_03_cvr_driven.sv|apb_env/apb_trans.sv|apb_env/apb_master.sv|apb_env/apb_if.sv|apb_env/apb_gen.sv|apb_env/apb_monitor.sv|env/env.sv|env/scoreboard.sv|
-Z11 o-L mtiAvm -L mtiOvm -L mtiUvm -L mtiUPF
+vadder
 !i10b 1
-!s100 YK<4[cMgo=ol;VKcJ090j1
-!i103 1
-!s85 0
-Yapb_if
-R1
-DXx4 work 14 apb_if_sv_unit 0 22 V0a?2Pi<f>EbZQ?HE8Q=n0
-VZCi91ie3D@l?]gj`ma=hb2
+!s100 oezIR^>5^zQ5QVl4gD2800
+IQ;=e]5cU9E^@;[X;XhQ>J1
+V`g;l2OYZZgBPEE?LX1J]_3
+Z1 d/home/m/m_arabia/COEN413/Project
+Z2 w1649382958
+8hdl/adder.v
+Fhdl/adder.v
+L0 5
+Z3 OL;L;10.1e;51
 r1
-31
-IfdEA;4PeYf6QVfAm=OY703
-S1
-R2
-R3
-Z12 8apb_env/apb_if.sv
-Z13 Fapb_env/apb_if.sv
-L0 22
-R7
-R8
-R9
-R10
-R11
 !s85 0
+31
+Z4 !s108 1649462618.310872
+Z5 !s107 apb_env/result.sv|hdl/calc2_top.v|hdl/root.sv|env/scoreboard.sv|env/env.sv|apb_env/apb_monitor.sv|apb_env/apb_gen.sv|apb_env/apb_if.sv|apb_env/apb_master.sv|apb_env/apb_trans.sv|tests/test_03_cvr_driven.sv|tests/test_02_constrained.sv|tests/test_01_directed.sv|tests/test_00_debug.sv|hdl/shifter.v|hdl/priority.v|hdl/mux_out.v|hdl/holdreg.v|hdl/alu_output_stage.v|hdl/alu_input_stage.v|hdl/adder.v|
+Z6 !s90 hdl/adder.v|hdl/alu_input_stage.v|hdl/alu_output_stage.v|hdl/holdreg.v|hdl/mux_out.v|hdl/priority.v|hdl/shifter.v|tests/test_00_debug.sv|tests/test_01_directed.sv|tests/test_02_constrained.sv|tests/test_03_cvr_driven.sv|apb_env/apb_trans.sv|apb_env/apb_master.sv|apb_env/apb_if.sv|apb_env/apb_gen.sv|apb_env/apb_monitor.sv|env/env.sv|env/scoreboard.sv|hdl/root.sv|hdl/calc2_top.v|
+Z7 o-L mtiAvm -L mtiOvm -L mtiUvm -L mtiUPF
+valu_input_stage
 !i10b 1
-!s100 M6i^O7nnohFYLJ1<]Bbgo2
-!s105 apb_if_sv_unit
-Xapb_if_sv_unit
+!s100 dV5X9KheWHD`<OKV?JGT21
+Ia7=D7_YzUZh[gz[iQ]E5I2
+VWo2Mci<XNcQ^T4?:61iKl0
 R1
-VV0a?2Pi<f>EbZQ?HE8Q=n0
+R2
+8hdl/alu_input_stage.v
+Fhdl/alu_input_stage.v
+L0 1
+R3
 r1
-31
-IV0a?2Pi<f>EbZQ?HE8Q=n0
-S1
-R2
-R3
-R12
-R13
-R6
-L1 6
-R7
-R8
-R9
-R10
-R11
 !s85 0
-!i10b 1
-!s100 9Z7?m9jakLTd7Y<Fd?b0g1
-!i103 1
-Xapb_master_sv_unit
-R1
-IE<iEAeM_z7^YeE=EUIn:E2
-VE<iEAeM_z7^YeE=EUIn:E2
-S1
-R2
-R3
-8apb_env/apb_master.sv
-Z14 Fapb_env/apb_master.sv
-R5
-R6
-L2 6
-R7
-r1
 31
-R8
-R9
-R10
-R11
-!i10b 1
-!s100 Gl3?UTReNXjT<@gd1b_?j2
-!i103 1
-!s85 0
-Xapb_monitor_sv_unit
-R1
-Ig:XOPH1W3Q6AB=L=W:D[?3
-Vg:XOPH1W3Q6AB=L=W:D[?3
-S1
-R2
-R3
-8apb_env/apb_monitor.sv
-Z15 Fapb_env/apb_monitor.sv
-R5
-R6
-L2 6
-R7
-r1
-31
-R8
-R9
-R10
-R11
-!i10b 1
-!s100 k81A6P;7U_jSh@dHhD70Z3
-!i103 1
-!s85 0
-Xapb_trans_sv_unit
-R1
-ILac=0EF1^M9^>DYZ3?zSI2
-VLac=0EF1^M9^>DYZ3?zSI2
-S1
-R2
-R3
-8apb_env/apb_trans.sv
-R5
-R6
-L1 6
-R7
-r1
-31
-R8
-R9
-R10
-R11
-!i10b 1
-!s100 9mJBNLcKI1@Z4bddJddK=1
-!i103 1
-!s85 0
-Xenv_sv_unit
-R1
-I^e;;FF`<Fkc0>J_1?P;623
-V^e;;FF`<Fkc0>J_1?P;623
-S1
-R2
-R3
-8env/env.sv
-Z16 Fenv/env.sv
-R5
-R6
-R13
-R14
-R5
-R15
-R5
 R4
 R5
-Z17 Fenv/scoreboard.sv
+R6
+R7
+valu_output_stage
+!i10b 1
+!s100 L60;SPKBPIHN[[h5mJ9bI0
+I:BemMUoZScEmBa`6i87mJ2
+V91O?8O0=;];<lc8>Elad11
+R1
+R2
+8hdl/alu_output_stage.v
+Fhdl/alu_output_stage.v
+L0 1
+R3
+r1
+!s85 0
+31
+R4
 R5
-L2 6
-R7
-r1
-31
-R8
-R9
-R10
-R11
-!i10b 1
-!s100 Hc;zMhmNk:G34iG4fQNV31
-!i103 1
-!s85 0
-vmem
-R1
-DXx4 work 11 mem_sv_unit 0 22 cC0E^PoECbcM2k50X;:Hg0
-VV[XTT_P`[_K5boVP^m>[:1
-r1
-31
-I1H:=M>dhed]Sioo2KcR>V3
-S1
-R2
-R3
-Z18 8hdl/mem.sv
-Z19 Fhdl/mem.sv
-L0 19
-R7
-R8
-R9
-R10
-R11
-!s85 0
-!i10b 1
-!s100 N]NE4h2cTd5nAWGjzi^Rh0
-!s105 mem_sv_unit
-Xmem_sv_unit
-R1
-VcC0E^PoECbcM2k50X;:Hg0
-r1
-!s85 0
-31
-IcC0E^PoECbcM2k50X;:Hg0
-S1
-R2
-R3
-R18
-R19
 R6
-L1 6
 R7
-R8
-R9
-R10
-R11
+vholdreg
 !i10b 1
-!s100 4HnS^FWb`N<_?@0kWBeLD0
-!i103 1
-Xroot_sv_unit
+!s100 ]H4HU7he@RQ^e<;joPeX`0
+IWFaT;aHFSQYci6RE<gRNW3
+VIVdA`YRDOYJL_;R<^=OXn3
 R1
-Imd[l2XNlz4IS]>CcVHcCb3
-Vmd[l2XNlz4IS]>CcVHcCb3
-S1
 R2
+8hdl/holdreg.v
+Fhdl/holdreg.v
+L0 1
 R3
-8hdl/root.sv
+r1
+!s85 0
+31
+R4
+R5
 R6
+R7
+vmux_out
+!i10b 1
+!s100 dGfI`84DEVV]:4FGGE>XX2
+IFmL3Old1i8ELNIJoea;Sa1
+Vah649924YjF8[[@hazVdQ0
+R1
+R2
+8hdl/mux_out.v
+Fhdl/mux_out.v
 L0 6
-R7
-r1
-31
-R8
-R9
-R10
-R11
-!i10b 1
-!s100 >YhSH_z_=KRM>BGBNgLAX1
-!i103 1
-!s85 0
-Xscoreboard_sv_unit
-R1
-IPWT;[Qb6;[[UO1eo`L?7i3
-VPWT;[Qb6;[[UO1eo`L?7i3
-S1
-R2
 R3
-8env/scoreboard.sv
-R17
-R5
-R6
-L2 6
-R7
 r1
-31
-R8
-R9
-R10
-R11
-!i10b 1
-!s100 gYL@]^kWdP_P`2XKN3fDC0
-!i103 1
 !s85 0
-4test
-R1
-DXx4 work 26 test_03_cvr_driven_sv_unit 0 22 :EflmZF[DBMS];R6Z[7Pj2
-V5k0ZK78?CE:3Dj<;mfT6j0
-r1
 31
-ICPI^jj;?@ZlS^2FJBjfZ92
-S1
-R2
-R3
-Z20 8tests/test_03_cvr_driven.sv
-Z21 Ftests/test_03_cvr_driven.sv
-R16
-R5
-R6
-R13
-R14
-R5
-R15
-R5
 R4
 R5
-R17
+R6
+R7
+vpriority
+!i10b 1
+!s100 W086kTMc=;UNk^ioLU:<<2
+IYnEeN6bm4[3IR9k<]GN]30
+VPTfL4IkBPJSN=06b@Pf8[0
+R1
+R2
+8hdl/priority.v
+Fhdl/priority.v
+L0 5
+R3
+r1
+!s85 0
+31
+R4
 R5
-L0 36
+R6
 R7
-R8
-R9
-R10
-R11
-!s85 0
+vshifter
 !i10b 1
-!s100 i?d80UPJ06JYNdICi5jWX2
-!s105 test_03_cvr_driven_sv_unit
-Xtest_01_directed_sv_unit
+!s100 R`L8n90iO60oe3:z`gl2T0
+IT8SB<>NTnhRe5OCKmG?cH0
+V;YY:infAj[=N`zVM39X>Y2
 R1
-V74E4ZeVd1KoF>2N4ikV271
-r1
-31
-I74E4ZeVd1KoF>2N4ikV271
-S1
 R2
+8hdl/shifter.v
+Fhdl/shifter.v
+L0 5
 R3
-8tests/test_01_directed.sv
-Ftests/test_01_directed.sv
-L0 33
-R7
-R8
-R9
-R10
-R11
-!s85 0
-!i10b 1
-!s100 KWg^STTAhE:^3m6RDX6AP0
-!i103 1
-Xtest_02_constrained_sv_unit
-R1
-VI8Y=B:9M>_aCBSP5934<[0
 r1
-31
-II8Y=B:9M>_aCBSP5934<[0
-S1
-R2
-R3
-8tests/test_02_constrained.sv
-Ftests/test_02_constrained.sv
-L0 30
-R7
-R8
-R9
-R10
-R11
 !s85 0
-!i10b 1
-!s100 MhK;4:jU`LA>RGM9]jdek2
-!i103 1
-Xtest_03_cvr_driven_sv_unit
-R1
-V:EflmZF[DBMS];R6Z[7Pj2
-r1
 31
-I:EflmZF[DBMS];R6Z[7Pj2
-S1
-R2
-R3
-R20
-R21
-L0 33
+R4
+R5
+R6
 R7
-R8
-R9
-R10
-R11
-!s85 0
-!i10b 1
-!s100 6aAQ?nRiIKUMT`LgS0cO[0
-!i103 1
-vtop
-R1
-VN_LSzbK4zaWJdUWIgnc=02
-r1
-31
-I^gb0?gS0l2]zS;9:0SF_Q0
-S1
-R2
-R3
-8hdl/top.sv
-Fhdl/top.sv
-L0 18
-R7
-R8
-R9
-R10
-R11
-!s85 0
-!i10b 1
-!s100 3gbZcGVhaWSgm]`MdOnQ;0
-!s105 top_sv_unit
