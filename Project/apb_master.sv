@@ -1,23 +1,4 @@
-/***************************************************************************
- *
- * File:        $RCSfile: apb_master.sv,v $
- * Revision:    $Revision: 1.8 $  
- * Date:        $Date: 2003/07/15 15:18:31 $
- *
- *******************************************************************************
- *
- * Basic Transaction Verification Module aimed at
- * creating read() and write() transactions based
- * on APB management Interface
- *
- *******************************************************************************
- * Copyright (c) 1991-2005 by Synopsys Inc.  ALL RIGHTS RESERVED.
- * CONFIDENTIAL AND PROPRIETARY INFORMATION OF SYNOPSYS INC.
- *******************************************************************************
- */
-
-
-`define APB_MASTER_IF	apb_master_if.master_cb
+`define APB_MASTER_IF apb_master_if.master_cb
 `include "apb_trans.sv"
 
   

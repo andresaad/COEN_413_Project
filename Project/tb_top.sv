@@ -1,6 +1,6 @@
 `include "testbench.sv"
-`include "calc2_top.v"
-`include "apb_if.sv"
+//`include "calc2_top.v"
+//`include "apb_if.sv"
 
 module tb_top;
 

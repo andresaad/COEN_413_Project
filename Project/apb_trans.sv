@@ -1,6 +1,6 @@
 
-`ifndef APB_IF_DEFINE
-`define APB_IF_DEFINE
+`ifndef APB_TRANS_DEFINE
+`define APB_TRANS_DEFINE
 
 `include "root.sv"
 
