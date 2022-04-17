@@ -9,5 +9,8 @@
 - Andre Saad
 
 
-# Introduction
+# Description
+In this project, we are provided a DUT, which is a simple calculator which contains 4 ports. Each port in the calculator can have up to 4 commands at one given instance. The calculator is able to perform the following 4 commands : Add, Subtract, Shift Left, Shift Right. We are required to perform both Direct and Random Testing with our Verification Environment to test the functionality of the provided design.
+
+
 
