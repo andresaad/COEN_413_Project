@@ -1,1 +1,676 @@
 
+
+---------------------------------------------------------INTERFACE---------------------------------------------------------------
+// COEN413 - WINTER 2022
+// CONCORDIA UNIVERSITY
+
+`ifndef CALC_IF_DEFINE
+`define CALC_IF_DEFINE
+
+`include "root.sv"
+
+interface calc_if(input PClk);
+    logic [CALC_CMD_WIDTH-1:0]  PCmd;
+    logic [CALC_DATA_WIDTH-1:0]  PData;
+    logic [1:0] PTag;
+
+    logic Rst;
+
+            // PORT 1
+            logic [CALC_CMD_WIDTH-1:0] req1_cmd_in;
+            logic [CALC_DATA_WIDTH-1:0]  req1_data_in;
+            logic [1:0]  req1_tag_in;
+            wire [1:0]  out_resp1;
+            wire [CALC_DATA_WIDTH-1:0]  out_data1;
+            wire [1:0]  out_tag1;
+
+            // PORT 2
+            logic [CALC_CMD_WIDTH-1:0] req2_cmd_in;
+            logic [CALC_DATA_WIDTH-1:0]  req2_data_in;
+            logic [1:0]  req2_tag_in;
+            wire [1:0]  out_resp2;
+            wire [CALC_DATA_WIDTH-1:0]  out_data2;
+            wire [1:0]  out_tag2;
+
+            // PORT 3
+            logic [CALC_CMD_WIDTH-1:0] req3_cmd_in;
+            logic [CALC_DATA_WIDTH-1:0]  req3_data_in;
+            logic [1:0]  req3_tag_in;
+            wire [1:0]  out_resp3;
+            wire [CALC_DATA_WIDTH-1:0]  out_data3;
+            wire [1:0]  out_tag3;
+
+            // PORT 4
+            logic [CALC_CMD_WIDTH-1:0] req4_cmd_in;
+            logic [CALC_DATA_WIDTH-1:0]  req4_data_in;
+            logic [1:0]  req4_tag_in;
+            wire [1:0]  out_resp4;
+            wire [CALC_DATA_WIDTH-1:0]  out_data4;   
+            wire [1:0]  out_tag4;
+   
+
+    always @ (posedge PClk) begin
+
+            //two clock cycle per command one command at a time
+        
+        req1_cmd_in <= PCmd;
+        req2_cmd_in <= PCmd;
+        req3_cmd_in <= PCmd;
+        req4_cmd_in <= PCmd;
+    
+        req1_data_in <= PData;
+        req2_data_in <= PData;
+        req3_data_in <= PData;
+        req4_data_in <= PData;
+
+        req1_tag_in <= PTag;
+        req2_tag_in <= PTag;
+        req3_tag_in <= PTag;
+        req4_tag_in <= PTag;
+        
+    end
+
+  
+
+  //modport are use to group signals together and specify the direction
+  // Master Modport,  input signal
+  modport Master(input PClk, output PCmd, PData, PTag, Rst);
+
+  // Monitor Modport
+  //allows you to connect a monitor module
+  modport Monitor(input PClk, out_resp1, out_resp2, out_resp3, out_resp4,
+                        out_data1, out_data2, out_data3, out_data4,
+                        out_tag1, out_tag2, out_tag3, out_tag4
+                        );
+
+ // Slave Modport, output signal
+  modport Slave(input   req1_cmd_in, req2_cmd_in, req3_cmd_in, req4_cmd_in,
+                        req1_data_in, req2_data_in, req3_data_in, req4_data_in,
+                        req1_tag_in, req2_tag_in, req3_tag_in, req4_tag_in,
+                output  out_resp1, out_resp2, out_resp3, out_resp4,
+                        out_data1, out_data2, out_data3, out_data4,
+                        out_tag1, out_tag2, out_tag3, out_tag4
+                );
+  
+
+endinterface
+
+`endif    
+
+
+------------------------------------------------------------Generator-------------------------------------------------------------
+`include "calc_request.sv"
+
+//generator
+
+class request_gen;
+
+  rand calc_request rand_tr;
+
+  calc_request my_tr;
+
+  int max_trans_cnt;
+  
+
+  event ended;
+  
+  // Counts the number of performed transactions
+  int trans_cnt = 0;
+
+  bit verbose;
+  
+
+  mailbox #(calc_request) gen2mas; //put in queue data inside 
+    
+  // Constructor
+  function new(mailbox #(calc_request) gen2mas, int max_trans_cnt, bit verbose=0);
+    this.gen2mas       = gen2mas;
+    this.verbose       = verbose;
+    this.max_trans_cnt = max_trans_cnt;
+    rand_tr            = new;
+    my_tr = new;
+  endfunction
+
+
+  task main();
+    while(trans_cnt <= max_trans_cnt)
+      begin
+  // Generating Random Transactions
+        
+        my_tr = randomizeTrans(); //create a random transaction
+        //my_tr.randomize();
+        gen2mas.put(my_tr); //put it inside the mailboc
+        ++trans_cnt;
+      end 
+        
+  
+    ->ended;
+
+  endtask
+
+  virtual function calc_request randomizeTrans(); //the randomize can only be 1-2 ,5 and 6
+    rand_tr.trans_cnt = trans_cnt;
+    if (! this.rand_tr.randomize() with {rand_tr.cmd dist{4'b0001 := 25, 4'b0010 := 25, 4'b0101 := 25, 4'b0110 := 25};})
+      begin
+        $display("CANNOT RANDOMIZE");
+        $finish;
+      end
+
+    return rand_tr.copy();
+  endfunction
+
+    
+endclass
+
+-------------------------------------------------------------TRANSACTION--------------------------------------------------
+// COEN413 - WINTER 2022
+// CONCORDIA UNIVERSITY
+// U-G1
+ //transaction
+`ifndef CALC_REQUEST_DEFINE
+`define CALC_REQUEST_DEFINE
+
+typedef enum {defo, AL, AH, AO, SL, SH, SO, easyA, easyS, BC} mode_t; //for the constraint
+
+// TRANSACTION OBJECT
+class calc_request;
+
+    // Each transaction will contain a command, Data 1 and Dats 2
+    // The 'rand' keywoard is used to randomize the bits
+    rand bit [3:0] cmd;    // 4-bit 
+    rand bit [31:0] data;  // 32-bit
+    rand bit [31:0] data2; // 32-bit
+    
+
+      static int count=0; //count each command
+      bit [1:0] tag;
+      int id, trans_cnt;
+
+      function new;
+      id = count++;
+      tag = id;
+      endfunction
+
+    mode_t mode = BC;
+ 
+  // COPY CONSTRUCTOR
+  function calc_request copy();
+    calc_request to   = new();
+    to.cmd        = this.cmd;
+    to.data        = this.data;
+    to.data2        = this.data2;
+    to.mode = this.mode;
+    copy = to;
+  endfunction: copy
+    
+endclass
+
+`endif
+
+
+-----------------------------------------------DRIVER---------------------------------------------------------------
+// COEN413 - WINTER 2022
+// CONCORDIA UNIVERSITY
+
+`define CALC_MASTER_IF  calc_master_if
+`include "calc_request.sv"
+
+//driver
+
+  
+class calc_master;
+
+    bit verbose;
+    virtual calc_if.Master calc_master_if;
+    mailbox #(calc_request) gen2mas, mas2scb; // one for the scoreboard
+
+  
+    // Master Concstructor -> Virtual IF, Mailbox (gen2mas, mas2scb)
+    function new(virtual calc_if.Master calc_master_if, 
+                 mailbox #(calc_request) gen2mas, mas2scb,
+                 bit verbose=0);    
+      this.verbose        = verbose;
+      this.calc_master_if = calc_master_if;
+      this.gen2mas        = gen2mas;
+      this.mas2scb        = mas2scb;
+    endfunction: new
+    
+    // Main Task for the Master Class
+    task main();
+       calc_request tr;
+
+       $display("   ---   Beginning Master   ---");
+
+       forever begin
+     
+        // Retrieve Transaction object from Mailbox then Drive to ports
+        gen2mas.get(tr);
+        drive(tr);
+
+   
+      end
+
+      
+    endtask: main
+        
+
+// Resets Pins to default
+ task reset();
+      `CALC_MASTER_IF.Rst <= 1;
+      `CALC_MASTER_IF.PCmd  <= 0;
+      `CALC_MASTER_IF.PData <= 0;
+      `CALC_MASTER_IF.PTag <= 0;
+      repeat(4) @(posedge `CALC_MASTER_IF.PClk);
+      `CALC_MASTER_IF.Rst <= 0;
+   endtask: reset
+
+  // Driver to DUTPorts
+  task  drive(calc_request tr);//at the edge of the clock we setting the clock command equal to the object command, to drive the signal
+     // First Command at first clock cycle
+     @(posedge `CALC_MASTER_IF.PClk)
+     `CALC_MASTER_IF.PCmd  <= tr.cmd;
+     `CALC_MASTER_IF.PData <= tr.data;
+     `CALC_MASTER_IF.PTag <= tr.tag;
+     
+     // Second command at following clock cycle
+     @(posedge `CALC_MASTER_IF.PClk)
+     `CALC_MASTER_IF.PCmd  <= 4'b0000; //always 0
+     `CALC_MASTER_IF.PData <= tr.data2;
+     `CALC_MASTER_IF.PTag <= 2'b00;//always 0 
+     
+     // Adding Transaction to Master-Scoreboard Mailbox
+     mas2scb.put(tr); // put inside the scoreboard mailbox
+
+  endtask: drive
+  
+ 
+
+endclass: calc_master
+
+-----------------------------------------------------------Monitor----------------------------------------
+// COEN413 - WINTER 2022
+// CONCORDIA UNIVERSITY
+
+`define CALC_MONITOR_IF calc_monitor_if
+`include "calc_result.sv"
+
+class calc_monitor;
+
+  bit verbose;
+  
+  // Result Object
+  calc_result tr;
+
+  virtual calc_if.Monitor calc_monitor_if;
+  mailbox #(calc_result) mon2scb; //to  the scoreboard to read the result
+
+    
+  function new(virtual calc_if.Monitor calc_monitor_if, mailbox #(calc_result) mon2scb, bit verbose=0);
+    this.mon2scb = mon2scb;
+    this.calc_monitor_if = calc_monitor_if;
+    this.verbose = verbose;
+  endfunction: new
+
+  task main();
+
+    forever begin
+      @(posedge calc_monitor_if.PClk)
+      
+      if (`CALC_MONITOR_IF.out_resp1 !== 2'b00) begin
+        this.tr = new;
+        tr.out_Resp = `CALC_MONITOR_IF.out_resp1;
+        tr.out_Data = `CALC_MONITOR_IF.out_data1;
+        tr.out_Tag = `CALC_MONITOR_IF.out_tag1;
+        tr.out_Port = 1; 
+        
+        mon2scb.put(tr);
+      end
+      
+  
+      if (`CALC_MONITOR_IF.out_resp2 !== 2'b00) begin
+        this.tr = new;
+        tr.out_Resp = `CALC_MONITOR_IF.out_resp2;
+        tr.out_Data = `CALC_MONITOR_IF.out_data2;
+        tr.out_Tag = `CALC_MONITOR_IF.out_tag2;
+        tr.out_Port = 2; 
+
+        mon2scb.put(tr);
+      end
+      
+
+      if (`CALC_MONITOR_IF.out_resp3 !== 2'b00) begin
+        this.tr = new;
+        tr.out_Resp = `CALC_MONITOR_IF.out_resp3;
+        tr.out_Data = `CALC_MONITOR_IF.out_data3;
+        tr.out_Tag = `CALC_MONITOR_IF.out_tag3;
+        tr.out_Port = 3; 
+      
+        mon2scb.put(tr);
+      end
+      
+      
+      if (`CALC_MONITOR_IF.out_resp4 !== 2'b00) begin
+        this.tr = new;
+        tr.out_Resp = `CALC_MONITOR_IF.out_resp4;
+        tr.out_Data = `CALC_MONITOR_IF.out_data4;
+        tr.out_Tag = `CALC_MONITOR_IF.out_tag4;
+        tr.out_Port = 4; 
+      
+        mon2scb.put(tr);
+      end
+
+    end 
+  endtask: main
+
+endclass: calc_monitor
+
+
+-----------------------------------------------------------ScoreBoard------------------------------------------------------------
+`include "calc_request.sv"
+`include "calc_result.sv"
+
+class scoreboard;
+
+  typedef enum {CORRECT, INCORRECT} calc_result_check;
+  
+  // Verbosity level
+  bit verbose;
+  
+  // Max # of transactions
+  int max_trans_cnt;
+  event ended;
+
+  // Number of good matches
+  int match;
+
+  // Transaction coming in
+  mailbox #(calc_request) mas2scb;
+  mailbox #(calc_result) mon2scb;   
+
+  //Result of calc_request
+  calc_result_check res_check;
+  
+  //request and result objects
+  calc_request mas_tr;
+  calc_result mon_tr;
+  
+  //others   
+  bit [31:0] expected_data_array[3:0];
+  bit [31:0] exp_val;
+  calc_request request_array[3:0];
+
+  bit[3:0] c1;
+  bit[31:0] d1;
+  bit[31:0] d2;
+  
+  
+
+  // Constructor
+  function new(int max_trans_cnt, mailbox #(calc_request) mas2scb, mailbox #(calc_result) mon2scb, bit verbose=0);
+    this.max_trans_cnt = max_trans_cnt;
+    this.mon2scb       = mon2scb;
+    this.mas2scb       = mas2scb;
+    this.verbose       = verbose;
+
+  endfunction
+  
+
+
+  // Method to receive transactions from master and monitor
+  task main();
+    fork
+        forever begin
+            mas2scb.get(mas_tr);//input
+            
+            request_array[mas_tr.tag] = mas_tr;
+            
+            case(mas_tr.cmd)
+        
+            //check for addition
+            4'b0001:
+                begin
+                    exp_val = mas_tr.data + mas_tr.data2;
+           expected_data_array[mas_tr.tag] = exp_val;
+                   
+                end
+
+            //check for sub             
+            4'b0010:
+                begin
+                    exp_val = mas_tr.data - mas_tr.data2;
+           expected_data_array[mas_tr.tag] = exp_val;
+                                    
+                end
+
+            //check for left shift              
+            4'b0101:
+                begin
+                    exp_val = mas_tr.data << mas_tr.data2[4:0];
+           expected_data_array[mas_tr.tag] = exp_val;
+
+                end
+
+            //check for right shift             
+            4'b0110:
+                begin
+                    exp_val = mas_tr.data >> mas_tr.data2[4:0];
+                    expected_data_array[mas_tr.tag] = exp_val;
+                   
+                end
+
+            
+          default:
+                begin
+                  $display("SCOREBOARD ERROR");
+                 
+                end
+            endcase
+        end
+        
+        forever begin
+            mon2scb.get(mon_tr);//output
+            
+
+            res_check = CORRECT;
+            
+          exp_val = expected_data_array[mon_tr.out_Tag];            
+            
+            if (mon_tr.out_Data !== exp_val) begin
+                $display("\n[  ERROR  ]\t Port #: %1d \tExpected value: %d \tReceived Value: %5d \t CMD : %4b \tD1 : %5d \D2 : %d",mon_tr.out_Port,exp_val,   mon_tr.out_Data, request_array[mon_tr.out_Tag].cmd, request_array[mon_tr.out_Tag].data, request_array[mon_tr.out_Tag].data2);
+                res_check = INCORRECT;
+            end
+
+     
+            else if (mon_tr.out_Data == exp_val && exp_val!= 0)begin
+                $display("\n[ CORRECT ]\t Port #: %1d \tExpected value: %d \tReceived Value: %5d",mon_tr.out_Port, mon_tr.out_Data, exp_val);
+                res_check = CORRECT;
+            end
+            
+            
+            // Determine if the end of test has been reached
+            if(--max_trans_cnt<1)
+              ->ended;
+            
+        end // forever
+    join_none
+    
+  endtask
+
+endclass
+
+--------------------------------------------------------------------Environment-------------------------------------------------
+
+`include "calc_if.sv"
+`include "calc_request.sv"
+`include "calc_master.sv"
+`include "calc_monitor.sv"
+`include "calc_result.sv"
+`include "request_gen.sv"
+`include "scoreboard.sv"
+//Environment
+
+class test_cfg;
+
+  int trans_cnt;
+
+endclass: test_cfg
+
+
+class env;
+
+  // Test configurations
+  test_cfg    tcfg;
+
+  // Transactors
+  request_gen     gen;
+  calc_master  mst;
+  calc_monitor mon;
+  scoreboard  scb;
+
+  int tcount = 1000;
+
+  // APB transaction mailbox. Used to pass transaction
+  // from APB gen to APB master, master to scoreboard, and monitor to scoreboard
+  mailbox #(calc_request) gen2mas, mas2scb;
+  mailbox #(calc_result) mon2scb;
+
+  virtual calc_if aif;
+
+  function new(virtual calc_if aif);
+    this.aif  = aif;
+    gen2mas   = new();
+    mas2scb   = new();
+    mon2scb   = new();
+    tcfg      = new();
+    
+    gen      = new(gen2mas, tcount, 1);
+    mst      = new(this.aif, gen2mas, mas2scb, 1);
+    mon      = new(this.aif, mon2scb);
+    scb      = new(tcfg.trans_cnt, mas2scb, mon2scb);
+  endfunction: new
+
+  virtual task pre_test();
+    // Make sure the same # of transactions are expected by the scoreboard
+    scb.max_trans_cnt = gen.max_trans_cnt;
+    fork
+      scb.main();
+      mst.main();
+      mon.main();
+    join_none
+  endtask: pre_test
+
+  virtual task test();
+    mst.reset();
+    fork
+      gen.main();
+    join_none
+  endtask: test
+
+  virtual task post_test();
+    fork
+      wait(gen.ended.triggered);
+      wait(scb.ended.triggered);
+    join
+  endtask: post_test
+
+  task run();
+    pre_test();
+    test();
+    post_test();
+  endtask: run
+
+endclass: env
+
+
+--------------------------------------------------------------------------TEST-----------------------------------------------------
+`include "env.sv"
+
+//typedef enum {defo, easyA, easyS} mode_t;
+
+program automatic test(calc_if hif);
+
+env env;
+
+initial begin
+
+  // Direct Test#1
+  $display("\n ***** START OF DIRECT TESTS \n");
+  env = new(hif);
+  env.tcount = 100;
+  
+  env.run();
+
+  $display("\n ***** END OF DIRECTED TEST ***** \n");
+
+  $finish;
+end 
+
+endprogram
+
+--------------------------------------------------------TOP----------------------------------------------------------------------
+/*******************************************************************************
+ *
+ * File:        $RCSfile: top.v,v $
+ * Revision:    $Revision: 1.7 $  
+ * Date:        $Date: 2003/07/15 15:18:31 $
+ *
+ *******************************************************************************
+ *
+ * Top level SystemVerilog file that instantiates the APB interface, testbench
+ * and design under test
+ *
+ *******************************************************************************
+ * Copyright (c) 1991-2005 by Synopsys Inc.  ALL RIGHTS RESERVED.
+ * CONFIDENTIAL AND PROPRIETARY INFORMATION OF SYNOPSYS INC.
+ *******************************************************************************
+ */
+
+module top;
+  parameter simulation_cycle = 100;
+  
+  bit clk;
+  always #(simulation_cycle/2) 
+    clk = ~clk;
+
+  calc_if       my_calc_if(clk); // APB interafce
+  test          t1(my_calc_if);  // Testbench program
+  
+  calc2_top     m1  (
+                    .c_clk(clk),
+                    .reset(my_calc_if.Rst),
+                    .req1_cmd_in(my_calc_if.req1_cmd_in), //Cmd and data for all 4 input ports
+                    .req2_cmd_in(my_calc_if.req2_cmd_in),
+                    .req3_cmd_in(my_calc_if.req3_cmd_in),
+                    .req4_cmd_in(my_calc_if.req4_cmd_in),
+                    
+                    .req1_data_in(my_calc_if.req1_data_in),
+                    .req2_data_in(my_calc_if.req2_data_in),
+                    .req3_data_in(my_calc_if.req3_data_in),
+                    .req4_data_in(my_calc_if.req4_data_in),
+                    
+                    .req1_tag_in(my_calc_if.req1_tag_in),
+                    .req2_tag_in(my_calc_if.req2_tag_in),
+                    .req3_tag_in(my_calc_if.req3_tag_in),
+                    .req4_tag_in(my_calc_if.req4_tag_in),
+                    
+                    .out_resp1(my_calc_if.out_resp1), //Resp and data for all 4 input ports
+                    .out_resp2(my_calc_if.out_resp2),
+                    .out_resp3(my_calc_if.out_resp3),
+                    .out_resp4(my_calc_if.out_resp4),
+                    
+                    .out_data1(my_calc_if.out_data1),
+                    .out_data2(my_calc_if.out_data2),
+                    .out_data3(my_calc_if.out_data3),
+                    .out_data4(my_calc_if.out_data4),
+
+                    .out_tag1(my_calc_if.out_tag1),
+                    .out_tag2(my_calc_if.out_tag2),
+                    .out_tag3(my_calc_if.out_tag3),
+                    .out_tag4(my_calc_if.out_tag4)
+                    );
+  
+ 
+endmodule  
+
+
+
