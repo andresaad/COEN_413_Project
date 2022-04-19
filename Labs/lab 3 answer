@@ -1,0 +1,442 @@
+COEN413/COEN6541 - Hardware Functional Verification
+1 of 2
+Questa SystemVerilog
+LAB 3: Virtual interfaces, monitors & scoreboards
+Goal Get familiar with:
+o virtual interfaces
+o monitors
+o scoreboards
+Location From the course Website, download the file lab3.tar.gz
+gunzip lab3.tar.gz
+tar -xvf lab3.tar
+Design APB Interface
+Relevant Files in lab3 directory:
+hdl/root.sv Global declarations & timescale
+hdl/mem.sv APB interface DUT
+hdl/top.sv Top level netlist
+tests/test.sv Top level testbench program
+apb_env/apb_defines.sv Address/data width parameters
+apb_env/apb_if.sv Interface / clocking block
+definition
+apb_env/apb_trans.sv Transactor class
+apb_env/apb_gen.sv Generator class
+apb_env/apb_master.sv Master class
+apb_env/apb_monitor.sv Monitor class
+env/env.sv Environment class
+env/scoreboard.sv Scoreboard Class
+Steps to complete
+1) In apb_env/apb_gen.sv, add the virtual function end_of_test that compares the
+number of transactions sent to the limit.
+2) Create virtual interface in the apb_master class, initialize it in the constructor. Hint: First
+review the interface and Master modports as defined in apb_if.
+3) Create virtual interface in the apb_monitor class, initialize it in the constructor. In main,
+monitor the interface for transactions. Hint: First review the interface and Monitor modports
+as defined in apb_if.
+** Search for “LAB” in the lab files to see where to add your code.
+COEN413/COEN6541 - Hardware Functional Verification
+2 of 2
+Testbench Environment
+-----------------------------------------------------------abp_geng.sv-----------------------------------------------------------------------------------------------
+/*******************************************************************************
+ *
+ * File:        $RCSfile: apb_gen.sv,v $
+ * Revision:    $Revision: 1.7 $  
+ * Date:        $Date: 2003/07/15 15:18:31 $
+ *
+ *******************************************************************************
+ *
+ * Basic Transaction Generator aimed at randomizing and
+ * initiating read() and write() transactions based
+ * on APB BFM (apb_master)
+ *
+ *******************************************************************************
+ * Copyright (c) 1991-2005 by Synopsys Inc.  ALL RIGHTS RESERVED.
+ * CONFIDENTIAL AND PROPRIETARY INFORMATION OF SYNOPSYS INC.
+ *******************************************************************************
+ */
+`include "apb_env/apb_trans.sv"
+
+
+class apb_gen;
+
+  // Random APB transaction
+  rand apb_trans rand_tr;
+
+  // Test terminates when the trans_cnt is greater
+  // than max_trans_cnt member
+  int max_trans_cnt;
+  
+  // event notifying that all transactions were sent
+  event ended;
+  
+  // Counts the number of performed transactions
+  int trans_cnt = 0;
+
+  // Verbosity level
+  bit verbose;
+  
+  // APB Transaction mailbox
+  mailbox #(apb_trans) gen2mas;
+    
+  // Constructor
+  function new(mailbox #(apb_trans) gen2mas, int max_trans_cnt, bit verbose=0);
+    this.gen2mas       = gen2mas;
+    this.verbose       = verbose;
+    this.max_trans_cnt = max_trans_cnt;
+    rand_tr            = new;
+  endfunction
+
+  // Method aimed at generating transactions
+  task main();
+    if(verbose)
+      $display($time, ": Starting apb_gen for %0d transactions", 
+               max_trans_cnt);
+    
+    // Start this daemon as long as there is a transaction 
+    // to be proceeded)
+    while(!end_of_test())
+      begin
+        apb_trans my_tr;
+        
+        // Wait & Get a transaction
+        my_tr = get_transaction();
+  
+        // Increment the number of sent transactions
+        if(my_tr.transaction != IDLE)
+          ++trans_cnt;
+  
+        if(verbose)
+          my_tr.display("Generator");
+
+        gen2mas.put(my_tr);
+      end // while (!end_of_test())
+        
+    if(verbose) 
+      $display($time, ": Ending apb_gen\n");
+  
+    ->ended;
+
+  endtask
+
+
+// LAB: Create the virtual function end_of_test that returns 1 when the test
+//  should stop, and 0 otherwise
+
+    virtual function integer end_of_test();
+        if (trans_cnt == max_trans_cnt) begin
+            return 1;
+        end
+        else begin
+            return 0;
+        end
+    endfunction
+//////////////////////////
+    
+  // Returns a transaction (associated with tr member)
+  virtual function apb_trans get_transaction();
+    rand_tr.trans_cnt = trans_cnt;
+    if (! this.rand_tr.randomize())
+      begin
+        $display("apb_gen::randomize failed");
+        $finish;
+      end
+    return rand_tr.copy();
+  endfunction
+    
+endclass
+-----------------------------------------------------------------------------apb_naster-------------------------------------------------------------------------------
+/***************************************************************************
+ *
+ * File:        $RCSfile: apb_master.sv,v $
+ * Revision:    $Revision: 1.8 $  
+ * Date:        $Date: 2003/07/15 15:18:31 $
+ *
+ *******************************************************************************
+ *
+ * Basic Transaction Verification Module aimed at
+ * creating read() and write() transactions based
+ * on APB management Interface
+ *
+ *******************************************************************************
+ * Copyright (c) 1991-2005 by Synopsys Inc.  ALL RIGHTS RESERVED.
+ * CONFIDENTIAL AND PROPRIETARY INFORMATION OF SYNOPSYS INC.
+ *******************************************************************************
+ */
+
+
+`define APB_MASTER_IF	apb_master_if.master_cb
+`include "apb_env/apb_trans.sv"
+
+  
+class apb_master;
+
+// LAB: Create a virtual APB Interface (Master side) called apb_master_if
+    virtual apb_if.Master apb_master_if;
+
+    // APB Transaction mailboxes
+    mailbox #(apb_trans) gen2mas, mas2scb;
+
+    // Verbosity level
+    bit verbose;
+
+// LAB: Initialize apb_master_if with value passed in
+    // Constructor
+    function new(virtual apb_if.Master apb_master_if, 
+                 mailbox #(apb_trans) gen2mas, mas2scb,
+                 bit verbose=0);
+      this.gen2mas       = gen2mas;
+      this.mas2scb       = mas2scb;
+      this.verbose       = verbose;
+      this.apb_master_if = apb_master_if;
+    endfunction: new
+    
+
+    // Main daemon. Runs forever to switch APB transaction to
+    // corresponding read/write/idle command
+    task main();
+       apb_trans tr;
+
+       if(verbose)
+         $display($time, ": Starting apb_master");
+
+       forever begin
+        // Wait & get a transaction
+        gen2mas.get(tr);
+  
+        // Decide what to do now with the incoming transaction
+        case (tr.transaction)
+          // Read cycle
+          READ:
+            read(tr);
+
+          // Write cycle
+          WRITE:
+            write(tr);
+
+          // Idle cycle
+          default:
+            idle();
+        endcase
+
+        if(verbose)
+          tr.display("Master");
+      end
+
+       if(verbose)
+         $display($time, ": Ending apb_master");
+
+    endtask: main
+
+
+    // Reset the DUT then go to active mode
+    task reset();
+      `APB_MASTER_IF.Rst <= 0;
+      idle();
+      #500 `APB_MASTER_IF.Rst <= 1;
+   endtask: reset
+
+
+    // Put the APB Bus in idle mode
+    task idle();
+      `APB_MASTER_IF.PAddr   <= 0;
+      `APB_MASTER_IF.PSel    <= 0;
+      `APB_MASTER_IF.PWData  <= 0;
+      `APB_MASTER_IF.PEnable <= 0;
+      `APB_MASTER_IF.PWrite  <= 0;
+      #100 `APB_MASTER_IF.PWrite  <= 0;
+   endtask: idle
+
+
+   // Implementation of the read() method
+   //    - drives the address bus,
+   //    - select the  bus,
+   //    - assert Penable signal,
+   //    - read the data and return it.
+   task read(apb_trans tr);
+     // Drive Control bus
+     `APB_MASTER_IF.PAddr  <= tr.addr;
+     `APB_MASTER_IF.PWrite <= 1'b0;
+     `APB_MASTER_IF.PSel   <= 1'b1;
+
+     // Assert Penable
+     #100 `APB_MASTER_IF.PEnable <= 1'b1;
+
+     // Deassert Penable & return the read data
+     #100 `APB_MASTER_IF.PEnable <= 1'b0;
+     tr.data = `APB_MASTER_IF.PRData;
+     mas2scb.put(tr);
+  endtask: read
+        
+
+  // Perform a write cycle
+   //    - Drive the address bus,
+   //    - Select the  bus,
+   //    - Drive data bus
+   //    - Assert Penable signal,
+  task  write(apb_trans tr);
+     // Drive Control bus
+     `APB_MASTER_IF.PAddr  <= tr.addr;
+     `APB_MASTER_IF.PWData <= tr.data;
+     `APB_MASTER_IF.PWrite <= 1'b1;
+     `APB_MASTER_IF.PSel   <= 1'b1;
+
+     // Assert Penable
+     #100 `APB_MASTER_IF.PEnable <= 1'b1;
+
+     // Deassert it
+     #100 `APB_MASTER_IF.PEnable <= 1'b0;
+     mas2scb.put(tr);
+  endtask: write
+
+endclass: apb_master
+---------------------------------------------------------------------------------------apb_monitor------------------------------------------------------------------
+/***************************************************************************
+ *
+ * Author:      Fabian Delguste 
+ * File:        $RCSfile: apb_mon.sv,v $
+ * Revision:    $Revision: 1.2 $  
+ * Date:        $Date: 2003/07/15 15:18:31 $
+ *
+ *******************************************************************************
+ *
+ * Basic Transaction Monitoring Module
+ *
+ * This transactor constantly watches the APB bus.
+ *
+ *******************************************************************************
+ * Copyright (c) 1991-2005 by Synopsys Inc.  ALL RIGHTS RESERVED.
+ * CONFIDENTIAL AND PROPRIETARY INFORMATION OF SYNOPSYS INC.
+ *******************************************************************************
+ */
+
+`define APB_MONITOR_IF	apb_monitor_if.monitor_cb
+`include "apb_env/apb_trans.sv"
+
+class apb_monitor;
+
+  bit verbose;
+  
+  // Data member in charge of holding monitored transaction
+  apb_trans tr;
+
+// LAB: Create a virtual APB Interface (Monitor side) called apb_monitor_if
+    virtual apb_if.Monitor apb_monitor_if;
+
+  // Monitor to scoreboard mailbox
+  mailbox #(apb_trans) mon2scb;
+
+// LAB: Initialize apb_monitor_if with value passed in
+  function new(virtual apb_if.Monitor apb_monitor_if, mailbox #(apb_trans) mon2scb, bit verbose=0);
+    this.verbose = verbose;
+    this.mon2scb = mon2scb;
+    this.apb_monitor_if = apb_monitor_if;
+  endfunction: new
+
+  task main();
+    bit Sel;
+    bit Rd_nWr;
+    forever begin
+
+      // Wait for the device to be selected
+      Sel = `APB_MONITOR_IF.PSel;
+      if(Sel == 0) 
+         @(posedge `APB_MONITOR_IF.PSel);
+
+      // Wait for latch enable
+      @(posedge `APB_MONITOR_IF.PEnable);
+
+      // Read/Write cycle decision
+      this.tr = new;
+      Rd_nWr = !`APB_MONITOR_IF.PWrite;
+    
+      if(Rd_nWr) 
+      begin
+        // Read cycle
+        // Store current transaction parameters 
+        tr.transaction = READ;
+        tr.data = `APB_MONITOR_IF.PRData;
+        tr.addr = `APB_MONITOR_IF.PAddr;
+      end
+      else 
+      begin
+        // Store current transaction parameters 
+        tr.transaction = WRITE;
+        tr.data = `APB_MONITOR_IF.PWData;
+        tr.addr = `APB_MONITOR_IF.PAddr;
+      end
+      
+      // Send received transaction to scoreboard
+      mon2scb.put(tr);
+      
+      if(verbose)
+        tr.display("Monitor");
+
+    end // forever
+  endtask: main
+
+endclass: apb_monitor
+---------------------------------------------------------------------------------------apb_if-------------------------------------------------------------------------
+/***************************************************************************
+ *
+ * File:        $RCSfile: apb_if.sv,v $
+ * Revision:    $Revision: 1.3 $  
+ * Date:        $Date: 2003/07/15 15:18:31 $
+ *
+ *******************************************************************************
+ *
+ * Generic APB interface
+ *
+ *******************************************************************************
+ * Copyright (c) 1991-2005 by Synopsys Inc.  ALL RIGHTS RESERVED.
+ * CONFIDENTIAL AND PROPRIETARY INFORMATION OF SYNOPSYS INC.
+ *******************************************************************************
+*/
+
+`ifndef APB_IF_DEFINE
+`define APB_IF_DEFINE
+
+`include "hdl/root.sv"
+
+
+interface apb_if(input PClk);
+  logic [APB_ADDR_WIDTH-1:0]  PAddr;
+  logic PSel;
+  logic [APB_DATA_WIDTH-1:0]  PWData;
+  logic [APB_DATA_WIDTH-1:0]  PRData;
+  logic PEnable;
+  logic PWrite;
+  logic Rst;
+
+  clocking master_cb @(posedge PClk);
+    default input #1 output #1;
+    output  PAddr;
+    output  PSel;
+    output  PWData;
+    input   PRData;
+    output  PEnable;
+    output  PWrite;
+    output  Rst; 
+  endclocking
+
+  clocking monitor_cb @(posedge PClk);
+    // default input #1skew output #0;
+    input  PAddr;
+    input  PSel;
+    input  PWData;
+    input  PRData;
+    input  PEnable;
+    input  PWrite;
+    input  Rst; 
+  endclocking
+
+  modport Master(clocking master_cb);
+  modport Monitor(clocking monitor_cb);
+
+  modport Slave(input PAddr, PClk, PSel, PWData, PEnable, PWrite, Rst,
+                output PRData);
+  
+
+endinterface
+
+`endif    
+
